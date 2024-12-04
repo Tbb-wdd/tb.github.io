@@ -8,15 +8,20 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin-top: 50px;
-            background-color: #f5f5f5;
             margin: 0;
             padding: 0;
+            background-color: #f5f5f5;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
+        }
+
+        .top-text {
+            color: red;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
         }
 
         img {
@@ -29,6 +34,14 @@
             width: 80%;
             margin: 20px 0;
             max-height: 500px;
+        }
+
+        #main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         #copy-section {
@@ -53,26 +66,65 @@
         h1 {
             font-size: 20px;
         }
+
+        .bottom-text {
+            text-align: left;
+            margin: 10px 20px;
+        }
+
+        .red-text {
+            color: red;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .yellow-text {
+            color: rgb(245, 165, 6);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .yellow-text::before {
+            content: "●";
+            color: black;
+            font-size: 16px;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
-    <!-- 添加图片 -->
-    <img src="assets/image.png" alt="页面标志或说明" id="main-image">
+    <!-- 顶部红色字体 -->
+    <div class="top-text" id="top-text">
+        ☆☆☆严格把教程看完☆☆☆
+    </div>
 
-    <!-- 添加视频 -->
+    <div id="main-content">
+        <!-- 添加图片 -->
+        <img src="assets/image.png" alt="页面标志或说明" id="main-image">
+
+        <h1>输入兑换码</h1>
+        <input type="text" id="code-input" placeholder="请输入兑换码">
+        <button onclick="verifyCode()">验证</button>
+
+        <div id="copy-section">
+            <button id="copy-account" onclick="">复制账号</button>
+            <button id="copy-password" onclick="">复制密码</button>
+        </div>
+    </div>
+
+    <!-- 底部文字 -->
+    <div class="bottom-text" id="bottom-text">
+        <p class="red-text">注意事项！！！</p>
+        <p class="yellow-text">请不要在淘宝说（账号，id，ios，美区）等敏感词</p>
+        <p class="yellow-text">有售后问题请直接咨询VX客服：Tbb_0vO</p>
+    </div>
+
+    <!-- 将视频放在底部 -->
     <video controls>
         <source src="assets/sp.mp4" type="video/mp4">
         您的浏览器不支持视频播放。
     </video>
-
-    <h1>输入兑换码</h1>
-    <input type="text" id="code-input" placeholder="请输入兑换码">
-    <button onclick="verifyCode()">验证</button>
-
-    <div id="copy-section">
-        <button id="copy-account" onclick="">复制账号</button>
-        <button id="copy-password" onclick="">复制密码</button>
-    </div>
 
     <script>
         // 兑换码映射配置
