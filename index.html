@@ -74,7 +74,13 @@
         }
 
         .red-text {
-            color: red;
+            color: red; /* 注意事项！！！部分会使用这个 */
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .highlighted-text {
+            color: rgb(58, 38, 38); /* Tbb_0vO 单独的红色 */
             font-size: 16px;
             font-weight: bold;
         }
@@ -94,8 +100,8 @@
         }
 
         .bottom-red-text {
-            color: red;
-            font-size: 14px;
+            color: rgb(71, 18, 18);
+            font-size: 11px;
             font-weight: bold;
             text-align: center;
             margin: 10px 0;
@@ -126,7 +132,7 @@
     <div class="bottom-text" id="bottom-text">
         <p class="red-text">注意事项！！！</p>
         <p class="yellow-text">请不要在淘宝说（账号，id，ios，美区）等敏感词</p>
-        <p class="yellow-text">有售后问题请直接咨询VX客服：Tbb_0vO</p>
+        <p class="yellow-text">有售后问题请直接咨询VX客服：<span class="highlighted-text">Tbb_0vO</span></p>
     </div>
 
     <!-- 视频部分 -->
@@ -137,7 +143,7 @@
 
     <!-- 最底部红色文字 -->
     <div class="bottom-red-text">
-        *请勿咨询违禁词，客服将不给与回复，有问题请联系VX客服*
+        *请勿恶意咨询违禁词，客服将不给与回复，如有问题请联系VX客服*
     </div>
 
     <script>
