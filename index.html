@@ -3,12 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>网页示例</title>
+    <title>兑换码管理</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            padding: 20px;
+            margin-top: 50px;
+            background-color: #f5f5f5;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+        }
+        video {
+            width: 80%;
+            margin: 20px 0;
+            max-height: 500px;
+        }
+        #copy-section {
+            display: none;
+            margin-top: 20px;
         }
         button {
             margin: 10px;
@@ -16,61 +31,131 @@
             font-size: 16px;
             cursor: pointer;
         }
-        img, video {
-            max-width: 100%; /* 保证图片和视频适应屏幕 */
-            height: auto;
-        }
     </style>
 </head>
 <body>
-    <h1>网页示例</h1>
-    <!-- 图片 -->
-    <img src="assets/image.png" alt="示例图片">
-    <br><br>
+    <!-- 添加图片 -->
+    <img src="assets/image.png" alt="页面标志或说明" id="main-image">
 
-    <!-- 视频 -->
-    <video width="320" height="240" controls>
+    <!-- 添加视频 -->
+    <video controls>
         <source src="assets/sp.mp4" type="video/mp4">
-        您的浏览器不支持视频标签。
+        您的浏览器不支持视频播放。
     </video>
-    <br><br>
 
-    <!-- 复制账户按钮 -->
-    <button id="copyAccount">复制账户</button>
-    <!-- 复制密码按钮 -->
-    <button id="copyPassword">复制密码</button>
+    <h1>输入兑换码</h1>
+    <input type="text" id="code-input" placeholder="请输入兑换码">
+    <button onclick="verifyCode()">验证</button>
+
+    <div id="copy-section">
+        <p id="account-info"></p>
+        <p id="password-info"></p>
+        <button id="copy-account" onclick="">复制账号</button>
+        <button id="copy-password" onclick="">复制密码</button>
+    </div>
 
     <script>
-        let accountData = { account: "", password: "" };
+        // 兑换码映射配置
+        const codeMapping = {
+            "group1": {
+                codes: ["code1", "code2", "code3", "code4", "code5"], // 替换为你想设置的兑换码
+                account: "账号A123",
+                password: "密码A456"
+            },
+            "group2": {
+                codes: ["code101", "code102", "code103"],
+                account: "账号B789",
+                password: "密码B012"
+            }
+        };
 
-        // 从后台获取账户和密码
-        async function fetchData() {
-            try {
-                const response = await fetch('/api/data');
-                accountData = await response.json();
-                console.log("数据加载成功", accountData);
-            } catch (error) {
-                alert("加载数据失败！");
-                console.error(error);
+        // 冷却时间（以毫秒为单位，3个月）
+        const cooldownTime = 3 * 30 * 24 * 60 * 60 * 1000;
+
+        function verifyCode() {
+            const userCode = document.getElementById("code-input").value;
+            let found = false;
+
+            // 遍历兑换码映射
+            for (const key in codeMapping) {
+                const group = codeMapping[key];
+
+                // 检查兑换码是否存在
+                if (group.codes.includes(userCode)) {
+                    const lastUsedTime = getLastUsedTime(userCode);
+
+                    // 检查冷却时间
+                    if (lastUsedTime && !isCooldownOver(lastUsedTime)) {
+                        alert("兑换码无效！");
+                        return;
+                    }
+
+                    // 显示账号密码信息
+                    document.getElementById("account-info").textContent = `账号: ${group.account}`;
+                    document.getElementById("password-info").textContent = `密码: ${group.password}`;
+                    document.getElementById("copy-section").style.display = "block";
+
+                    // 更新冷却时间
+                    setLastUsedTime(userCode);
+
+                    // 动态绑定按钮行为
+                    document.getElementById("copy-account").onclick = () => copyToClipboard("账号已复制", group.account);
+                    document.getElementById("copy-password").onclick = () => copyToClipboard("密码已复制", group.password);
+
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                alert("兑换码错误！");
+                document.getElementById("copy-section").style.display = "none";
             }
         }
 
-        // 复制到剪贴板的函数
-        function copyToClipboard(type) {
-            const text = accountData[type];
-            navigator.clipboard.writeText(text).then(() => {
-                alert(`${type === 'account' ? '账户' : '密码'}复制成功！`);
-            }).catch(err => {
-                alert('复制失败，请重试！');
-            });
+        // 检查冷却时间是否结束
+        function isCooldownOver(lastUsedTime) {
+            const currentTime = Date.now();
+            return currentTime - lastUsedTime >= cooldownTime;
         }
 
-        // 按钮绑定事件
-        document.getElementById('copyAccount').onclick = () => copyToClipboard('account');
-        document.getElementById('copyPassword').onclick = () => copyToClipboard('password');
+        // 设置兑换码的最后使用时间
+        function setLastUsedTime(code) {
+            const currentTime = Date.now();
+            localStorage.setItem(`lastUsed_${code}`, currentTime);
+        }
 
-        // 页面加载时获取数据
-        fetchData();
+        // 获取兑换码的最后使用时间
+        function getLastUsedTime(code) {
+            const lastUsedTime = localStorage.getItem(`lastUsed_${code}`);
+            return lastUsedTime ? parseInt(lastUsedTime, 10) : null;
+        }
+
+        // 复制到剪贴板的函数
+        function copyToClipboard(message, content) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(content)
+                    .then(() => alert(message))
+                    .catch(err => console.error("复制失败:", err));
+            } else {
+                fallbackCopyToClipboard(content);
+            }
+        }
+
+        // 旧版浏览器的复制兼容方法
+        function fallbackCopyToClipboard(text) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand("copy");
+                alert("已复制：" + text);
+            } catch (err) {
+                console.error("复制失败", err);
+            }
+            document.body.removeChild(textarea);
+        }
     </script>
 </body>
 </html>
