@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        img, video {
+            max-width: 100%; /* 保证图片和视频适应屏幕 */
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>网页示例</h1>
+    <!-- 图片 -->
+    <img src="assets/image.png" alt="示例图片">
+    <br><br>
+
+    <!-- 视频 -->
+    <video width="320" height="240" controls>
+        <source src="assets/sp.mp4" type="video/mp4">
+        您的浏览器不支持视频标签。
+    </video>
+    <br><br>
+
+    <!-- 复制账户按钮 -->
+    <button id="copyAccount">复制账户</button>
+    <!-- 复制密码按钮 -->
+    <button id="copyPassword">复制密码</button>
+
+    <script>
+        let accountData = { account: "", password: "" };
+
+        // 从后台获取账户和密码
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/data');
+                accountData = await response.json();
+                console.log("数据加载成功", accountData);
+            } catch (error) {
+                alert("加载数据失败！");
+                console.error(error);
+            }
+        }
+
+        // 复制到剪贴板的函数
+        function copyToClipboard(type) {
+            const text = accountData[type];
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`${type === 'account' ? '账户' : '密码'}复制成功！`);
+            }).catch(err => {
+                alert('复制失败，请重试！');
+            });
+        }
+
+        // 按钮绑定事件
+        document.getElementById('copyAccount').onclick = () => copyToClipboard('account');
+        document.getElementById('copyPassword').onclick = () => copyToClipboard('password');
+
+        // 页面加载时获取数据
+        fetchData();
+    </script>
+</body>
+</html>
