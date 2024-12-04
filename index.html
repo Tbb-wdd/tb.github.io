@@ -7,7 +7,6 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
             margin: 0;
             padding: 0;
             background-color: #f5f5f5;
@@ -22,6 +21,7 @@
             font-size: 18px;
             font-weight: bold;
             margin: 10px 0;
+            text-align: center;
         }
 
         img {
@@ -31,9 +31,10 @@
         }
 
         video {
-            width: 80%;
-            margin: 20px 0;
-            max-height: 500px;
+            width: 60%;
+            margin: 20px auto;
+            max-height: 400px;
+            display: block;
         }
 
         #main-content {
@@ -91,6 +92,14 @@
             font-size: 16px;
             margin-right: 5px;
         }
+
+        .bottom-red-text {
+            color: red;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -98,7 +107,6 @@
     <div class="top-text" id="top-text">
         ☆☆☆严格把教程看完☆☆☆
     </div>
-
     <div id="main-content">
         <!-- 添加图片 -->
         <img src="assets/image.png" alt="页面标志或说明" id="main-image">
@@ -120,11 +128,16 @@
         <p class="yellow-text">有售后问题请直接咨询VX客服：Tbb_0vO</p>
     </div>
 
-    <!-- 将视频放在底部 -->
+    <!-- 视频部分 -->
     <video controls>
         <source src="assets/sp.mp4" type="video/mp4">
         您的浏览器不支持视频播放。
     </video>
+
+    <!-- 最底部红色文字 -->
+    <div class="bottom-red-text">
+        *请勿咨询违禁词，客服不给与回复，有问题请联系VX售后* 
+    </div>
 
     <script>
         // 兑换码映射配置
@@ -171,6 +184,9 @@
                     // 动态绑定按钮行为
                     document.getElementById("copy-account").onclick = () => copyToClipboard("账号已复制", group.account);
                     document.getElementById("copy-password").onclick = () => copyToClipboard("密码已复制", group.password);
+
+                    // 弹出提示
+                    alert("一次性兑换成功");
 
                     found = true;
                     break;
