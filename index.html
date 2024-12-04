@@ -18,7 +18,7 @@
 
         .top-text {
             color: red;
-            font-size: 25px;
+            font-size: 23px;
             font-weight: bold;
             margin: 10px 0;
             text-align: center;
@@ -45,32 +45,27 @@
             align-items: center;
         }
 
-        .input-group {
-            display: flex;
-            align-items: center;
-            margin: 20px 0;
+        #copy-section {
+            display: none;
+            margin-top: 20px;
         }
 
-        .input-group input {
-            padding: 10px;
-            font-size: 16px;
-            width: 200px;
-        }
-
-        .input-group button {
+        button {
+            margin: 10px;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
-            margin-left: 5px;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+            max-width: 300px;
         }
 
         h1 {
             font-size: 20px;
-        }
-
-        #copy-section {
-            display: none;
-            margin-top: 20px;
         }
 
         .bottom-text {
@@ -118,12 +113,8 @@
         <img src="assets/image.png" alt="页面标志或说明" id="main-image">
 
         <h1>输入兑换码</h1>
-
-        <!-- 输入框和验证按钮组 -->
-        <div class="input-group">
-            <input type="text" id="code-input" placeholder="请输入兑换码">
-            <button onclick="verifyCode()">验证</button>
-        </div>
+        <input type="text" id="code-input" placeholder="请输入兑换码">
+        <button onclick="verifyCode()">验证</button>
 
         <div id="copy-section">
             <button id="copy-account" onclick="">复制账号</button>
@@ -146,14 +137,14 @@
 
     <!-- 最底部红色文字 -->
     <div class="bottom-red-text">
-        * 请勿咨询违禁词，客服将不给与回复，如有问题请联系VX客服！*
+        *请勿咨询违禁词，客服将不给与回复，有问题请联系VX客服*
     </div>
 
     <script>
         // 兑换码映射配置
         const codeMapping = {
             "group1": {
-                codes: ["code111", "code22", "code33", "code44", "code55"], // 替换为你想设置的兑换码
+                codes: ["code12", "code23", "code3", "code4", "code5"], // 替换为你想设置的兑换码
                 account: "账号A123",
                 password: "密码A456"
             },
@@ -196,7 +187,7 @@
                     document.getElementById("copy-password").onclick = () => copyToClipboard("密码已复制", group.password);
 
                     // 弹出提示
-                    alert("一次性兑换成功");
+                    alert("一次性兑换成功，请记得及时下载！");
 
                     found = true;
                     break;
