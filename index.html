@@ -35,145 +35,152 @@
     <title>兑换码管理</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
-            padding: 10px;
-            background-color: #f5f5f5;
+            padding: 0;
+            background-color: white;
             min-height: 100vh;
+        }
+
+        .top-bar {
+            background-color: #E74C3C;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
 
         .top-text {
-            color: red;
-            font-size: 20px;
+            color: #E74C3C;
+            font-size: 18px;
             font-weight: bold;
             margin: 15px 0;
             text-align: center;
         }
 
-        img {
-            width: 100%;
-            max-width: 500px;
-            height: auto;
-            margin: 10px auto;
-            display: block;
-            border-radius: 8px;
+        .tutorial-images {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 10px;
         }
 
-        #main-content {
-            flex: 1;
+        .tutorial-images img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .input-section {
+            padding: 20px 15px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 15px;
-            gap: 15px;
-        }
-
-        #copy-section {
-            display: none;
-            width: 100%;
-            max-width: 500px;
             gap: 10px;
-            flex-direction: column;
-        }
-
-        button {
-            width: 100%;
-            padding: 15px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: none;
-            background: #007AFF;
-            color: white;
-            cursor: pointer;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        button:active {
-            background: #0056b3;
         }
 
         input {
             width: 100%;
-            max-width: 500px;
-            padding: 15px;
+            padding: 12px 15px;
             font-size: 16px;
             border: 1px solid #ddd;
             border-radius: 8px;
             box-sizing: border-box;
         }
 
-        h1 {
-            font-size: 18px;
-            margin: 10px 0;
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            background: #007AFF;
+            color: white;
+            margin-top: 5px;
         }
 
-        .bottom-text {
-            margin: 20px 10px;
+        #copy-section {
+            display: none;
+            padding: 0 15px;
+        }
+
+        .notice-section {
+            margin: 20px 15px;
+            background: #F8F9FA;
+            border-radius: 10px;
             padding: 15px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
         .red-text {
-            color: red;
+            color: #E74C3C;
             font-size: 16px;
             font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        .highlighted-text {
-            color: #007AFF;
-            font-size: 16px;
-            font-weight: bold;
+            margin-bottom: 10px;
         }
 
         .yellow-text {
-            color: #666;
+            color: #333;
             font-size: 14px;
-            line-height: 1.5;
-            margin: 10px 0;
+            line-height: 1.6;
+            margin: 8px 0;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
+            gap: 8px;
         }
 
         .yellow-text::before {
             content: "•";
             color: #007AFF;
-            font-size: 20px;
-            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        .highlighted-text {
+            color: #007AFF;
+            font-weight: bold;
         }
 
         .bottom-red-text {
             color: #999;
             font-size: 12px;
             text-align: center;
-            margin: 15px 0;
-            padding: 0 15px;
+            margin: 15px;
+            line-height: 1.4;
         }
     </style>
 </head>
 <body>
-    <div class="top-text" id="top-text">
+    <div class="top-bar">
+        tb-1201.top
+    </div>
+
+    <div class="top-text">
         ☆☆☆严格把教程看完☆☆☆
     </div>
 
-    <div id="main-content">
-        <img src="assets/jc.png" alt="页面标志或说明" id="main-image">
-        <h1>输入兑换码</h1>
-        <input type="text" id="code-input" placeholder="请输入兑换码">
-        <button onclick="verifyCode()">验证</button>
-
-        <div id="copy-section">
-            <button id="copy-account" onclick="">复制账号</button>
-            <button id="copy-password" onclick="">复制密码</button>
-        </div>
+    <div class="tutorial-images">
+        <img src="assets/jc1.png" alt="教程1">
+        <img src="assets/jc2.png" alt="教程2">
+        <img src="assets/jc3.png" alt="教程3">
+        <img src="assets/jc4.png" alt="教程4">
+        <img src="assets/jc5.png" alt="教程5">
+        <img src="assets/jc6.png" alt="教程6">
+        <img src="assets/jc7.png" alt="教程7">
+        <img src="assets/jc8.png" alt="教程8">
     </div>
 
-    <div class="bottom-text" id="bottom-text">
+    <div class="input-section">
+        <input type="text" id="code-input" placeholder="请输入兑换码">
+        <button onclick="verifyCode()">验证</button>
+    </div>
+
+    <div id="copy-section">
+        <button id="copy-account">复制账号</button>
+        <button id="copy-password">复制密码</button>
+    </div>
+
+    <div class="notice-section">
         <p class="red-text">注意事项！！！</p>
         <p class="yellow-text">请不要在淘宝说（账号，id，ios，美区）等敏感词</p>
         <p class="yellow-text">有售后问题请直接咨询VX客服：<span class="highlighted-text">Tbb_0vO</span></p>
