@@ -97,8 +97,22 @@
             font-size: 16px;
             border-radius: 8px;
             border: none;
-            background: #007AFF;
             color: white;
+        }
+
+        /* 验证按钮保持蓝色 */
+        .verify-btn {
+            background: #007AFF;
+        }
+
+        /* 复制账号按钮设为浅黄色 */
+        .copy-account-btn {
+            background: #FFB340;  /* 浅黄色 */
+        }
+
+        /* 复制密码按钮设为浅绿色 */
+        .copy-password-btn {
+            background: #4CD964;  /* 浅绿色 */
         }
 
         input {
@@ -179,12 +193,12 @@
         <div class="input-section">
             <h1>输入兑换码</h1>
             <input type="text" id="code-input" placeholder="请输入兑换码">
-            <button onclick="verifyCode()">验证</button>
+            <button onclick="verifyCode()" class="verify-btn">验证</button>
         </div>
 
         <div id="copy-section">
-            <button id="copy-account">复制账号</button>
-            <button id="copy-password">复制密码</button>
+            <button id="copy-account" class="copy-account-btn">复制账号</button>
+            <button id="copy-password" class="copy-password-btn">复制密码</button>
         </div>
     </div>
 
