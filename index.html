@@ -188,16 +188,16 @@
 
     <script>
         // 禁用右键
-        document.addEventListener("contextmenu", function(event) {
-            event.preventDefault();
-        });
+        // document.addEventListener("contextmenu", function(event) {
+        //     event.preventDefault();
+        // });
 
-        // 禁用 F12
-        document.addEventListener("keydown", function(event) {
-            if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
-                event.preventDefault();
-            }
-        });
+        // // 禁用 F12
+        // document.addEventListener("keydown", function(event) {
+        //     if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
+        //         event.preventDefault();
+        //     }
+        // });
 
         const cooldownTime = 3 * 30 * 24 * 60 * 60 * 1000;  // 90天
         const activeTime = 24 * 60 * 60 * 1000;  // 24小时
@@ -205,6 +205,9 @@
         function verifyCode() {
             const userCode = document.getElementById("code-input").value;
             let found = false;
+            
+            // 获取解密后的数据
+            const codeMapping = getCodeMapping();
 
             for (const key in codeMapping) {
                 const group = codeMapping[key];
