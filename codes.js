@@ -12,7 +12,7 @@ const codeMapping = {
     "group3": {
         codes: ["J9N8EO2RNL5X", "HIHJIT7EY0X6", "GUY3B5WGUQV6", "O1FLDV4J1WGL"],
         account: "m6veyod8p16f@gmx.com",    // 保卫战1-5
-        password: "Tt996644"
+        password: "Tt112233"
     },
     "group4": {
         codes: ["5F3TXBXTLC2L", "LJ18U1F0S7QO", "BCW25368JT6F", "LA3I8ALR28IT"],
