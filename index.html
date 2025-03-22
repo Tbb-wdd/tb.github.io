@@ -49,7 +49,7 @@
             });
         }
 
-        // 在 head 标签内最开始添加
+        // 域名切换逻辑
         (function() {
             const sites = [
                 'https://tb-1201.top',           // GitHub Pages 主域名
@@ -57,108 +57,49 @@
                 'https://vercel.tb-1201.top'     // Vercel 子域名
             ];
             
-            // 改进的站点检查函数
+            // 简化的站点检查函数
             async function checkSite(url) {
                 try {
-                    // 同时使用多种方式检测站点可用性
-                    const results = await Promise.all([
-                        // 方法1: 图片加载检测
-                        new Promise((resolve) => {
-                            const img = new Image();
-                            const timeout = setTimeout(() => resolve(false), 2000); // 2秒超时
-                            img.onload = () => {
-                                clearTimeout(timeout);
-                                resolve(true);
-                            };
-                            img.onerror = () => {
-                                clearTimeout(timeout);
-                                resolve(false);
-                            };
-                            img.src = url + '/assets/jc.png?' + new Date().getTime();
-                        }),
-                        
-                        // 方法2: fetch 检测
-                        new Promise(async (resolve) => {
-                            try {
-                                const response = await fetch(url + '/ping.txt', {
-                                    mode: 'no-cors',
-                                    cache: 'no-cache'
-                                });
-                                resolve(true);
-                            } catch {
-                                resolve(false);
-                            }
-                        })
-                    ]);
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2秒超时
                     
-                    // 任一方法成功即认为站点可用
-                    return results.some(result => result === true);
+                    await fetch(url, {
+                        method: 'HEAD',  // 只检查头信息，更快
+                        mode: 'no-cors',
+                        cache: 'no-cache',
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    return true;
                 } catch {
                     return false;
                 }
             }
 
-            // 改进的检查和重定向函数
+            // 简化的检查和重定向函数
             async function checkAndRedirect() {
                 const currentUrl = window.location.href;
                 const currentSite = sites.find(site => currentUrl.startsWith(site));
                 
-                // 存储上次检查时间和结果
-                const lastCheck = localStorage.getItem('lastSiteCheck');
-                const now = Date.now();
-                
-                // 如果距离上次检查不到5分钟且当前站点可用，则跳过检查
-                if (lastCheck) {
-                    const { timestamp, site, isAvailable } = JSON.parse(lastCheck);
-                    if (now - timestamp < 300000 && site === currentSite && isAvailable) {
-                        return;
-                    }
-                }
-
-                console.log('开始检查站点可用性...');
-                
                 // 检查当前站点
-                if (currentSite) {
-                    const isCurrentSiteAvailable = await checkSite(currentSite);
-                    
-                    // 保存检查结果
-                    localStorage.setItem('lastSiteCheck', JSON.stringify({
-                        timestamp: now,
-                        site: currentSite,
-                        isAvailable: isCurrentSiteAvailable
-                    }));
+                if (currentSite && await checkSite(currentSite)) {
+                    return; // 当前站点可用，不需要跳转
+                }
 
-                    if (isCurrentSiteAvailable) {
-                        console.log('当前站点可用');
+                // 当前站点不可用，检查其他站点
+                for (const site of sites) {
+                    if (site !== currentSite && await checkSite(site)) {
+                        window.location.replace(site);
                         return;
                     }
                 }
 
-                console.log('当前站点不可用，尝试切换...');
-
-                // 并行检查所有其他站点
-                const siteChecks = sites
-                    .filter(site => site !== currentSite)
-                    .map(async site => ({
-                        site,
-                        isAvailable: await checkSite(site)
-                    }));
-
-                const results = await Promise.all(siteChecks);
-                const availableSite = results.find(result => result.isAvailable);
-
-                if (availableSite) {
-                    console.log('找到可用站点:', availableSite.site);
-                    // 使用 replace 而不是 assign，这样不会在历史记录中留下记录
-                    window.location.replace(availableSite.site);
-                } else {
-                    console.log('所有站点都不可用');
-                    // 显示友好的错误提示
-                    showErrorMessage();
-                }
+                // 所有站点都不可用时显示错误信息
+                showErrorMessage();
             }
 
-            // 添加错误提示函数
+            // 错误提示函数
             function showErrorMessage() {
                 const message = document.createElement('div');
                 message.style.cssText = `
@@ -184,15 +125,8 @@
                 document.body.appendChild(message);
             }
 
-            // 页面加载完成后执行检查
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', checkAndRedirect);
-            } else {
-                checkAndRedirect();
-            }
-
-            // 添加定期检查
-            setInterval(checkAndRedirect, 300000); // 每5分钟检查一次
+            // 立即执行检查
+            checkAndRedirect();
         })();
     </script>
     <style>
