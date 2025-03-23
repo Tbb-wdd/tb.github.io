@@ -8,9 +8,9 @@
         // 域名切换逻辑
         (function() {
             const sites = [
-                'https://tb-1201.top',           // GitHub Pages 主域名
-                'https://netlify.tb-1201.top',   // Netlify 子域名
-                'https://vercel.tb-1201.top'     // Vercel 子域名
+                'https://netlify.tb-1201.top',   // Netlify 子域名(优先,通常更稳定)
+                'https://vercel.tb-1201.top',    // Vercel 子域名(备用)
+                'https://tb-1201.top'            // GitHub Pages 主域名(最后尝试)
             ];
             
             // 添加状态显示函数
@@ -39,48 +39,103 @@
             async function checkSite(url) {
                 try {
                     showStatus(`正在检测: ${url}`);
+                    
+                    // 先尝试 DNS 预解析
+                    const link = document.createElement('link');
+                    link.rel = 'preconnect';
+                    link.href = url;
+                    document.head.appendChild(link);
+                    
                     // 添加随机参数避免缓存
                     const noCache = `?_=${Date.now()}`; 
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
-
-                    const response = await fetch(url + noCache, {
-                        method: 'HEAD',  // 只请求头部
-                        mode: 'no-cors', // 允许跨域
-                        credentials: 'omit',
-                        cache: 'no-store', // 禁用缓存
-                        headers: {
-                            'Accept': 'text/html',
-                            'Cache-Control': 'no-cache'
-                        },
-                        signal: controller.signal
-                    });
-
-                    clearTimeout(timeoutId);
                     
-                    // 检查响应状态
+                    // 先尝试 HTTPS
+                    let response = await Promise.race([
+                        fetch(url.replace('http:', 'https:') + noCache, {
+                            method: 'HEAD',
+                            mode: 'no-cors',
+                            credentials: 'omit',
+                            cache: 'no-store',
+                            headers: {
+                                'Accept': 'text/html',
+                                'Cache-Control': 'no-cache'
+                            }
+                        }),
+                        new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('timeout')), 5000)
+                        )
+                    ]);
+
+                    // 如果 HTTPS 失败，尝试 HTTP
+                    if (!response) {
+                        response = await Promise.race([
+                            fetch(url.replace('https:', 'http:') + noCache, {
+                                method: 'HEAD',
+                                mode: 'no-cors',
+                                credentials: 'omit',
+                                cache: 'no-store',
+                                headers: {
+                                    'Accept': 'text/html',
+                                    'Cache-Control': 'no-cache'
+                                }
+                            }),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('timeout')), 5000)
+                            )
+                        ]);
+                    }
+
                     if (response.ok || response.status === 0) {
                         showStatus(`${url} 可用`);
                         return true;
                     }
+                    
                     showStatus(`${url} 不可用`);
                     return false;
                 } catch (error) {
+                    // 如果是 Safari 的特殊错误，尝试降级到 HTTP
+                    if (error.message.includes('安全的连接') || error.message.includes('secure connection')) {
+                        try {
+                            const httpUrl = url.replace('https:', 'http:');
+                            const response = await fetch(httpUrl + noCache, {
+                                method: 'HEAD',
+                                mode: 'no-cors',
+                                credentials: 'omit',
+                                cache: 'no-store'
+                            });
+                            
+                            if (response.ok || response.status === 0) {
+                                showStatus(`${url} (HTTP) 可用`);
+                                return true;
+                            }
+                        } catch (httpError) {
+                            console.error('HTTP 降级失败:', httpError);
+                        }
+                    }
+                    
                     showStatus(`${url} 检测失败: ${error.message}`);
                     return false;
+                } finally {
+                    // 清理预解析链接
+                    const links = document.head.getElementsByTagName('link');
+                    for (let i = links.length - 1; i >= 0; i--) {
+                        if (links[i].rel === 'preconnect') {
+                            document.head.removeChild(links[i]);
+                        }
+                    }
                 }
             }
 
             // 增加重试机制
-            async function checkSiteWithRetry(url, retries = 2) {
+            async function checkSiteWithRetry(url, retries = 3) {
                 for (let i = 0; i < retries; i++) {
                     if (await checkSite(url)) {
-                        return true;  // 只要有一次成功就返回true
+                        return true;
                     }
-                    // 失败后等待1秒再重试
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    // 重试间隔增加到2秒
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                 }
-                return false; // 重试次数用完仍失败
+                return false;
             }
 
             // 改进的检查和重定向函数
@@ -138,9 +193,19 @@
                 document.body.appendChild(message);
             }
 
-            // 页面加载完成后立即执行检查
+            // 预热所有域名
+            async function warmupDNS() {
+                for (const site of sites) {
+                    const link = document.createElement('link');
+                    link.rel = 'preconnect';
+                    link.href = site;
+                    document.head.appendChild(link);
+                }
+            }
+
+            // 页面加载时预热
             window.addEventListener('DOMContentLoaded', () => {
-                console.log('页面加载完成，开始检查域名');
+                warmupDNS();
                 checkAndRedirect();
             });
             
