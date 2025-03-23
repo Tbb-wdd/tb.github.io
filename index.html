@@ -13,33 +13,9 @@
                 'https://tb-1201.top'            // GitHub Pages 主域名(最后尝试)
             ];
             
-            // 添加状态显示函数
-            function showStatus(message) {
-                console.log(message);  // 同时在控制台输出
-                const status = document.createElement('div');
-                // 设置提示框样式
-                status.style.cssText = `
-                    position: fixed;
-                    bottom: 10px;
-                    right: 10px;
-                    background: rgba(0,0,0,0.7);
-                    color: white;
-                    padding: 5px 10px;
-                    border-radius: 5px;
-                    font-size: 12px;
-                    z-index: 9999;
-                `;
-                status.textContent = message;
-                document.body.appendChild(status);
-                // 2秒后自动消失
-                setTimeout(() => status.remove(), 2000);
-            }
-
             // 改进的站点检查函数
             async function checkSite(url) {
                 try {
-                    showStatus(`正在检测: ${url}`);
-                    
                     // 先尝试 DNS 预解析
                     const link = document.createElement('link');
                     link.rel = 'preconnect';
@@ -86,11 +62,9 @@
                     }
 
                     if (response.ok || response.status === 0) {
-                        showStatus(`${url} 可用`);
                         return true;
                     }
                     
-                    showStatus(`${url} 不可用`);
                     return false;
                 } catch (error) {
                     // 如果是 Safari 的特殊错误，尝试降级到 HTTP
@@ -105,7 +79,6 @@
                             });
                             
                             if (response.ok || response.status === 0) {
-                                showStatus(`${url} (HTTP) 可用`);
                                 return true;
                             }
                         } catch (httpError) {
@@ -113,7 +86,6 @@
                         }
                     }
                     
-                    showStatus(`${url} 检测失败: ${error.message}`);
                     return false;
                 } finally {
                     // 清理预解析链接
