@@ -143,20 +143,27 @@
                 try {
                     const currentUrl = window.location.href;
                     
-                    // 先检查当前域名（带重试）
-                    const currentSite = sites.find(site => currentUrl.startsWith(site));
-                    if (currentSite && await checkSiteWithRetry(currentSite)) {
-                        return;
+                    // 如果当前不是 netlify，强制检查 netlify
+                    if (!currentUrl.includes('netlify.tb-1201.top')) {
+                        showStatus('正在检查 Netlify 域名...');
+                        if (await checkSiteWithRetry('https://netlify.tb-1201.top')) {
+                            showStatus('Netlify 域名可用，准备跳转...');
+                            window.location.replace('https://netlify.tb-1201.top');
+                            return;
+                        }
+                        showStatus('Netlify 域名不可用，尝试其他域名...');
                     }
                     
-                    // 检查其他域名（带重试）
+                    // 如果 netlify 不可用，再检查其他域名
                     for (const site of sites) {
-                        if (site !== currentSite && await checkSiteWithRetry(site)) {
+                        if (!currentUrl.startsWith(site) && await checkSiteWithRetry(site)) {
+                            showStatus(`找到可用域名: ${site}`);
                             window.location.replace(site);
                             return;
                         }
                     }
                     
+                    showStatus('所有域名都不可用');
                     showErrorMessage();
                 } catch (error) {
                     console.error('域名检查失败:', error);
