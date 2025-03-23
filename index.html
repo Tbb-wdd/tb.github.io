@@ -138,32 +138,50 @@
                 return false;
             }
 
+            // 添加一个标记，记录是否已经找到稳定域名
+            let stableDomainFound = false;
+
             // 改进的检查和重定向函数
             async function checkAndRedirect() {
+                // 如果已经找到稳定域名，不再检查
+                if (stableDomainFound) {
+                    return;
+                }
+
                 try {
                     const currentUrl = window.location.href;
                     
-                    // 如果当前不是 netlify，强制检查 netlify
-                    if (!currentUrl.includes('netlify.tb-1201.top')) {
-                        showStatus('正在检查 Netlify 域名...');
+                    // 如果已经在 netlify 域名上，检查是否稳定
+                    if (currentUrl.includes('netlify.tb-1201.top')) {
                         if (await checkSiteWithRetry('https://netlify.tb-1201.top')) {
-                            showStatus('Netlify 域名可用，准备跳转...');
+                            stableDomainFound = true;  // 标记为已找到稳定域名
+                            return;
+                        }
+                    } else {
+                        // 不在 netlify 域名上，检查 netlify 是否可用
+                        if (await checkSiteWithRetry('https://netlify.tb-1201.top')) {
                             window.location.replace('https://netlify.tb-1201.top');
                             return;
                         }
-                        showStatus('Netlify 域名不可用，尝试其他域名...');
                     }
                     
-                    // 如果 netlify 不可用，再检查其他域名
+                    // 如果 netlify 不可用，检查其他域名
                     for (const site of sites) {
-                        if (!currentUrl.startsWith(site) && await checkSiteWithRetry(site)) {
-                            showStatus(`找到可用域名: ${site}`);
+                        if (currentUrl.startsWith(site)) {
+                            // 如果当前域名可用，标记为稳定
+                            if (await checkSiteWithRetry(site)) {
+                                stableDomainFound = true;
+                                return;
+                            }
+                            continue;
+                        }
+                        
+                        if (await checkSiteWithRetry(site)) {
                             window.location.replace(site);
                             return;
                         }
                     }
                     
-                    showStatus('所有域名都不可用');
                     showErrorMessage();
                 } catch (error) {
                     console.error('域名检查失败:', error);
@@ -210,17 +228,20 @@
                 }
             }
 
-            // 页面加载时预热
+            // 页面加载时预热和检查一次
             window.addEventListener('DOMContentLoaded', () => {
                 warmupDNS();
                 checkAndRedirect();
             });
             
-            // 每15秒检查一次
-            setInterval(() => {
-                console.log('定期检查域名');
+            // 只在未找到稳定域名时才定期检查
+            const checkInterval = setInterval(() => {
+                if (stableDomainFound) {
+                    clearInterval(checkInterval);  // 找到稳定域名后停止定期检查
+                    return;
+                }
                 checkAndRedirect();
-            }, 15000);
+            }, 30000);
         })();
     </script>
     <style>
