@@ -5,50 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>兑换码管理</title>
     <script>
-        // 检测是否为移动设备
-        function isMobile() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                   (window.innerWidth <= 800 && window.innerHeight <= 900);
-        }
-
-        // 如果不是移动设备，立即显示提示并阻止页面其他内容加载
-        if (!isMobile()) {
-            document.addEventListener('DOMContentLoaded', function() {
-                document.body.innerHTML = `
-                    <div style="
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        background: #f5f5f5;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 20px;
-                        box-sizing: border-box;
-                        text-align: center;
-                    ">
-                        <div style="
-                            font-size: 24px;
-                            color: red;
-                            font-weight: bold;
-                            margin-bottom: 20px;
-                        ">⚠️ 请使用手机访问 ⚠️</div>
-                        <div style="
-                            font-size: 16px;
-                            color: #666;
-                            line-height: 1.6;
-                        ">
-                            为了更好的使用体验，请使用手机浏览器访问本页面。<br>
-                            如有问题请联系客服：<span style="color: #007AFF;">Tbb_0vO</span>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
         // 域名切换逻辑
         (function() {
             const sites = [
@@ -57,60 +13,95 @@
                 'https://vercel.tb-1201.top'     // Vercel 子域名
             ];
             
+            // 添加状态显示函数
+            function showStatus(message) {
+                console.log(message);  // 同时在控制台输出
+                const status = document.createElement('div');
+                // 设置提示框样式
+                status.style.cssText = `
+                    position: fixed;
+                    bottom: 10px;
+                    right: 10px;
+                    background: rgba(0,0,0,0.7);
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 5px;
+                    font-size: 12px;
+                    z-index: 9999;
+                `;
+                status.textContent = message;
+                document.body.appendChild(status);
+                // 2秒后自动消失
+                setTimeout(() => status.remove(), 2000);
+            }
+
             // 改进的站点检查函数
             async function checkSite(url) {
                 try {
-                    // 添加超时控制
+                    showStatus(`正在检测: ${url}`);
+                    // 添加随机参数避免缓存
+                    const noCache = `?_=${Date.now()}`; 
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+                    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
 
-                    const response = await fetch(url, {
-                        method: 'HEAD',
-                        mode: 'no-cors',
+                    const response = await fetch(url + noCache, {
+                        method: 'HEAD',  // 只请求头部
+                        mode: 'no-cors', // 允许跨域
                         credentials: 'omit',
-                        cache: 'no-cache',
+                        cache: 'no-store', // 禁用缓存
                         headers: {
-                            'Accept': 'text/html'
+                            'Accept': 'text/html',
+                            'Cache-Control': 'no-cache'
                         },
                         signal: controller.signal
                     });
 
                     clearTimeout(timeoutId);
-                    return true;
+                    
+                    // 检查响应状态
+                    if (response.ok || response.status === 0) {
+                        showStatus(`${url} 可用`);
+                        return true;
+                    }
+                    showStatus(`${url} 不可用`);
+                    return false;
                 } catch (error) {
-                    console.log(`站点 ${url} 检查失败:`, error.message);
+                    showStatus(`${url} 检测失败: ${error.message}`);
                     return false;
                 }
+            }
+
+            // 增加重试机制
+            async function checkSiteWithRetry(url, retries = 2) {
+                for (let i = 0; i < retries; i++) {
+                    if (await checkSite(url)) {
+                        return true;  // 只要有一次成功就返回true
+                    }
+                    // 失败后等待1秒再重试
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                return false; // 重试次数用完仍失败
             }
 
             // 改进的检查和重定向函数
             async function checkAndRedirect() {
                 try {
                     const currentUrl = window.location.href;
-                    console.log('当前URL:', currentUrl);
                     
-                    // 先检查当前域名是否可用
+                    // 先检查当前域名（带重试）
                     const currentSite = sites.find(site => currentUrl.startsWith(site));
-                    if (currentSite && await checkSite(currentSite)) {
-                        console.log('当前站点可用，无需跳转');
+                    if (currentSite && await checkSiteWithRetry(currentSite)) {
                         return;
                     }
-
-                    console.log('当前站点不可用，尝试其他站点');
                     
-                    // 检查所有其他站点
+                    // 检查其他域名（带重试）
                     for (const site of sites) {
-                        if (site !== currentSite) {
-                            console.log(`检查站点: ${site}`);
-                            if (await checkSite(site)) {
-                                console.log(`找到可用站点: ${site}`);
-                                window.location.replace(site);
-                                return;
-                            }
+                        if (site !== currentSite && await checkSiteWithRetry(site)) {
+                            window.location.replace(site);
+                            return;
                         }
                     }
                     
-                    console.log('所有站点都不可用');
                     showErrorMessage();
                 } catch (error) {
                     console.error('域名检查失败:', error);
@@ -153,7 +144,7 @@
                 checkAndRedirect();
             });
             
-            // 每15秒检查一次（原来是30秒）
+            // 每15秒检查一次
             setInterval(() => {
                 console.log('定期检查域名');
                 checkAndRedirect();
@@ -308,12 +299,6 @@
     </style>
 </head>
 <body>
-    <script>
-        // 如果是PC访问，添加class以禁用原有样式
-        if (!isMobile()) {
-            document.body.classList.add('pc-warning');
-        }
-    </script>
     <div class="top-text">
         ☆☆☆严格把教程看完☆☆☆
     </div>
