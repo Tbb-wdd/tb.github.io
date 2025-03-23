@@ -3,152 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains">
     <title>兑换码管理</title>
     <script>
         // 域名切换逻辑
         (function() {
             const sites = [
-                'https://netlify.tb-1201.top',   // Netlify 子域名(优先,通常更稳定)
-                'https://vercel.tb-1201.top',    // Vercel 子域名(备用)
-                'https://tb-1201.top'            // GitHub Pages 主域名(最后尝试)
+                'https://netlify.tb-1201.top', // 主域名
+                'https://vercel.tb-1201.top',  // 备用域名1
+                'https://tb-1201.top'          // 备用域名2
             ];
             
             // 改进的站点检查函数
             async function checkSite(url) {
                 try {
-                    // 先尝试 DNS 预解析
-                    const link = document.createElement('link');
-                    link.rel = 'preconnect';
-                    link.href = url;
-                    document.head.appendChild(link);
-                    
-                    // 添加随机参数避免缓存
-                    const noCache = `?_=${Date.now()}`; 
-                    
-                    // 先尝试 HTTPS
-                    let response = await Promise.race([
-                        fetch(url.replace('http:', 'https:') + noCache, {
-                            method: 'HEAD',
-                            mode: 'no-cors',
-                            credentials: 'omit',
-                            cache: 'no-store',
-                            headers: {
-                                'Accept': 'text/html',
-                                'Cache-Control': 'no-cache'
-                            }
-                        }),
-                        new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('timeout')), 5000)
-                        )
-                    ]);
-
-                    // 如果 HTTPS 失败，尝试 HTTP
-                    if (!response) {
-                        response = await Promise.race([
-                            fetch(url.replace('https:', 'http:') + noCache, {
-                                method: 'HEAD',
-                                mode: 'no-cors',
-                                credentials: 'omit',
-                                cache: 'no-store',
-                                headers: {
-                                    'Accept': 'text/html',
-                                    'Cache-Control': 'no-cache'
-                                }
-                            }),
-                            new Promise((_, reject) => 
-                                setTimeout(() => reject(new Error('timeout')), 5000)
-                            )
-                        ]);
-                    }
-
-                    if (response.ok || response.status === 0) {
-                        return true;
-                    }
-                    
-                    return false;
+                    // 使用完整的请求头
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        mode: 'no-cors',
+                        credentials: 'omit',
+                        headers: {
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache',
+                            'Upgrade-Insecure-Requests': '1'
+                        }
+                    });
+                    return true;
                 } catch (error) {
-                    // 如果是 Safari 的特殊错误，尝试降级到 HTTP
-                    if (error.message.includes('安全的连接') || error.message.includes('secure connection')) {
-                        try {
-                            const httpUrl = url.replace('https:', 'http:');
-                            const response = await fetch(httpUrl + noCache, {
-                                method: 'HEAD',
-                                mode: 'no-cors',
-                                credentials: 'omit',
-                                cache: 'no-store'
-                            });
-                            
-                            if (response.ok || response.status === 0) {
-                                return true;
-                            }
-                        } catch (httpError) {
-                            console.error('HTTP 降级失败:', httpError);
+                    // 特殊处理 Safari 的安全连接错误
+                    if (error.message.includes('SSL') || 
+                        error.message.includes('安全') || 
+                        error.message.includes('secure')) {
+                        // 如果是主域名的 SSL 错误，尝试备用域名
+                        if (url === sites[0]) {
+                            return false;
                         }
-                    }
-                    
-                    return false;
-                } finally {
-                    // 清理预解析链接
-                    const links = document.head.getElementsByTagName('link');
-                    for (let i = links.length - 1; i >= 0; i--) {
-                        if (links[i].rel === 'preconnect') {
-                            document.head.removeChild(links[i]);
-                        }
-                    }
-                }
-            }
-
-            // 增加重试机制
-            async function checkSiteWithRetry(url, retries = 3) {
-                for (let i = 0; i < retries; i++) {
-                    if (await checkSite(url)) {
+                        window.location.href = url;
                         return true;
                     }
-                    // 重试间隔增加到2秒
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    return false;
                 }
-                return false;
             }
-
-            // 添加一个标记，记录是否已经找到稳定域名
-            let stableDomainFound = false;
 
             // 改进的检查和重定向函数
             async function checkAndRedirect() {
-                // 如果已经找到稳定域名，不再检查
-                if (stableDomainFound) {
-                    return;
-                }
+                if (stableDomainFound) return;  // 如果已找到稳定域名，不再检查
 
                 try {
                     const currentUrl = window.location.href;
                     
-                    // 如果已经在 netlify 域名上，检查是否稳定
-                    if (currentUrl.includes('netlify.tb-1201.top')) {
-                        if (await checkSiteWithRetry('https://netlify.tb-1201.top')) {
-                            stableDomainFound = true;  // 标记为已找到稳定域名
-                            return;
-                        }
-                    } else {
-                        // 不在 netlify 域名上，检查 netlify 是否可用
-                        if (await checkSiteWithRetry('https://netlify.tb-1201.top')) {
-                            window.location.replace('https://netlify.tb-1201.top');
-                            return;
-                        }
+                    // 检查当前域名是否可用
+                    const currentSite = sites.find(site => currentUrl.includes(site));
+                    if (currentSite && await checkSite(currentSite)) {
+                        stableDomainFound = true;
+                        return;
                     }
-                    
-                    // 如果 netlify 不可用，检查其他域名
+
+                    // 依次尝试所有域名
                     for (const site of sites) {
-                        if (currentUrl.startsWith(site)) {
-                            // 如果当前域名可用，标记为稳定
-                            if (await checkSiteWithRetry(site)) {
-                                stableDomainFound = true;
-                                return;
-                            }
-                            continue;
-                        }
-                        
-                        if (await checkSiteWithRetry(site)) {
+                        if (await checkSite(site)) {
                             window.location.replace(site);
                             return;
                         }
@@ -156,32 +72,26 @@
                     
                     showErrorMessage();
                 } catch (error) {
-                    console.error('域名检查失败:', error);
+                    console.error('访问失败:', error);
                     showErrorMessage();
                 }
             }
 
+            // 添加一个标记，记录是否已经找到稳定域名
+            let stableDomainFound = false;
+
             // 错误提示函数
             function showErrorMessage() {
                 const message = document.createElement('div');
-                message.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: rgba(255, 0, 0, 0.1);
-                    padding: 20px;
-                    border-radius: 10px;
-                    text-align: center;
-                    z-index: 9999;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                `;
                 message.innerHTML = `
                     <div style="color: red; font-weight: bold; margin-bottom: 10px;">
-                        ⚠️ 当前站点暂时不可用
+                        ⚠️ 安全连接失败
                     </div>
                     <div style="color: #666; margin-bottom: 10px;">
-                        系统正在尝试切换到其他可用站点，请稍候...
+                        请尝试：
+                        <br>1. 刷新页面
+                        <br>2. 清除浏览器缓存
+                        <br>3. 使用其他浏览器访问
                     </div>
                     <div style="color: #666;">
                         如果问题持续，请联系客服：<span style="color: #007AFF;">Tbb_0vO</span>
